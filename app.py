@@ -11,14 +11,10 @@ import asyncio
 import aiohttp
 import logging
 import ipaddress
-import subprocess
 from aiohttp import web
 
 # 环境变量
-UUID = os.environ.get('UUID', 'd9609ea9-1303-405c-8bbb-2a16fbbba19c')   # 节点UUID
-NEZHA_SERVER = os.environ.get('NEZHA_SERVER', '')    # 哪吒v0填写格式: nezha.xxx.com  哪吒v1填写格式: nezha.xxx.com:8008
-NEZHA_PORT = os.environ.get('NEZHA_PORT', '')        # 哪吒v1请留空，哪吒v0 agent端口
-NEZHA_KEY = os.environ.get('NEZHA_KEY', '')          # 哪吒v0或v1密钥，哪吒面板后台命令里获取
+UUID = os.environ.get('UUID', '7bd180e8-1142-4387-93f5-03e8d750a896')   # 节点UUID
 DOMAIN = os.environ.get('DOMAIN', '')                # 项目分配的域名或反代后的域名,不包含https://前缀,例如: domain.xxx.com
 SUB_PATH = os.environ.get('SUB_PATH', 'sub')         # 节点订阅token
 NAME = os.environ.get('NAME', '')                    # 节点名称
@@ -535,92 +531,6 @@ async def http_handler(request):
     
     return web.Response(status=404, text='Not Found\n')
 
-def get_download_url():
-    import platform
-    arch = platform.machine()
-    
-    if 'arm' in arch.lower() or 'aarch64' in arch.lower():
-        if not NEZHA_PORT:
-            return 'https://arm64.eooce.com/v1'
-        else:
-            return 'https://arm64.eooce.com/agent'
-    else:
-        if not NEZHA_PORT:
-            return 'https://amd64.eooce.com/v1'
-        else:
-            return 'https://amd64.eooce.com/agent'
-
-async def download_file():
-    if not NEZHA_SERVER and not NEZHA_KEY:
-        return
-    
-    try:
-        url = get_download_url()
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
-                if resp.status == 200:
-                    content = await resp.read()
-                    with open('npm', 'wb') as f:
-                        f.write(content)
-                    os.chmod('npm', 0o755)
-                    logger.info('✅ npm downloaded successfully')
-    except Exception as e:
-        logger.error(f'Download failed: {e}')
-
-async def run_nezha():
-    try:
-        result = subprocess.run(['ps', 'aux'], capture_output=True, text=True)
-        if './npm' in result.stdout and '[n]pm' in result.stdout:
-            logger.info('npm is already running, skip...')
-            return
-    except:
-        pass
-    
-    # 等待文件下载完成
-    await download_file()
-    
-    command = ''
-    tls_ports = ['443', '8443', '2096', '2087', '2083', '2053']
-    if NEZHA_SERVER and NEZHA_PORT and NEZHA_KEY:
-        nezha_tls = '--tls' if NEZHA_PORT in tls_ports else ''
-        command = f'nohup ./npm -s {NEZHA_SERVER}:{NEZHA_PORT} -p {NEZHA_KEY} {nezha_tls} --disable-auto-update --report-delay 4 --skip-conn --skip-procs >/dev/null 2>&1 &'
-    elif NEZHA_SERVER and NEZHA_KEY:
-        if not NEZHA_PORT:
-            port = NEZHA_SERVER.split(':')[-1] if ':' in NEZHA_SERVER else ''
-            nz_tls = 'true' if port in tls_ports else 'false'
-            config = f"""client_secret: {NEZHA_KEY}
-debug: false
-disable_auto_update: true
-disable_command_execute: false
-disable_force_update: true
-disable_nat: false
-disable_send_query: false
-gpu: false
-insecure_tls: true
-ip_report_period: 1800
-report_delay: 4
-server: {NEZHA_SERVER}
-skip_connection_count: true
-skip_procs_count: true
-temperature: false
-tls: {nz_tls}
-use_gitee_to_upgrade: false
-use_ipv6_country_code: false
-uuid: {UUID}"""
-
-            with open('config.yaml', 'w') as f:
-                f.write(config)
-
-        command = f'nohup ./npm -c config.yaml >/dev/null 2>&1 &'
-    else:
-        return
-    
-    try:
-        subprocess.Popen(command, shell=True, executable='/bin/bash')
-        logger.info('✅ nz started successfully')
-    except Exception as e:
-        logger.error(f'Error running nz: {e}')
-
 async def add_access_task():
     if not AUTO_ACCESS or not DOMAIN:
         return
@@ -634,14 +544,6 @@ async def add_access_task():
         logger.info('Automatic Access Task added successfully')
     except:
         pass
-
-def cleanup_files():
-    for file in ['npm', 'config.yaml']:
-        try:
-            if os.path.exists(file):
-                os.remove(file)
-        except:
-            pass
 
 async def main():
     actual_port = PORT
@@ -670,13 +572,7 @@ async def main():
     site = web.TCPSite(runner, '0.0.0.0', actual_port)
     await site.start()
     logger.info(f"✅ server is running on port {actual_port}")
-    asyncio.create_task(run_nezha())
-    async def delayed_cleanup():
-        await asyncio.sleep(180)
-        cleanup_files()
-    
-    asyncio.create_task(delayed_cleanup())
-    
+
     await add_access_task()
     
     try:
@@ -691,4 +587,3 @@ if __name__ == '__main__':
         asyncio.run(main())
     except KeyboardInterrupt:
         print("\nServer stopped by user")
-        cleanup_files()
