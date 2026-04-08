@@ -17,9 +17,6 @@ Telegram交流反馈群组：https://t.me/eooceu
   | ------------ | ------ | ------ | ------ |
   | UUID         | 否 |d9609ea9-1303-405c-8bbb-2a16fbbba19c| 开启了哪吒v1,请修改UUID|
   | PORT         | 否 |  3000  |  节点监听端口,默认自动获取分配的端口                  |
-  | NEZHA_SERVER | 否 |        |哪吒v1填写形式：nz.abc.com:8008   哪吒v0填写形式：nz.abc.com|
-  | NEZHA_PORT   | 否 |        | 哪吒v1没有此变量，v0的agent端口| 
-  | NEZHA_KEY    | 否 |        | 哪吒v1的NZ_CLIENT_SECRET或v0的agent端口 |
   | NAME         | 否 |        | 节点名称前缀，例如：koyeb |
   | DOMAIN       | 是 |        | 项目分配的域名或已反代的域名，不包括https://前缀  |
   | SUB_PATH     | 否 |  sub   | 订阅token    |
