@@ -24,7 +24,8 @@ Telegram交流反馈群组：https://t.me/eooceu
   | DEBUG        | 否 |  false | 调试模式，默认关闭，true开启                   |
 
 * 域名/${SUB_PATH}查看节点信息，非标端口，域名:端口/${SUB_PATH}  SUB_APTH为自行设置的订阅token，未设置默认为sub
-   python3 app.app
+
+*  python3 app.app
    python3 main.app 
 * 温馨提示：READAME.md为说明文件，请不要上传。
 * python混肴地址：https://freecodingtools.org/tools/obfuscator/python
