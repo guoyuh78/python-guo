@@ -14,7 +14,7 @@ import ipaddress
 from aiohttp import web
 
 # 环境变量
-UUID = os.environ.get('UUID', '')   # 节点UUID
+UUID = os.environ.get('UUID', 'd9609ea9-1303-405c-8bbb-2a16fbbba19c')   # 节点UUID
 DOMAIN = os.environ.get('DOMAIN', '')                # 项目分配的域名或反代后的域名,不包含https://前缀,例如: domain.xxx.com
 SUB_PATH = os.environ.get('SUB_PATH', 'sub')         # 节点订阅token
 NAME = os.environ.get('NAME', '')                    # 节点名称
